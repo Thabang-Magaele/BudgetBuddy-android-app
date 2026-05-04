@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Checked state: green-tinted background with border -->
+    <item android:state_checked="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#E8F5E9" />
+            <stroke android:width="2dp" android:color="@color/primary" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+
+    <!-- Default / unchecked state: white with subtle border -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/surface" />
+            <stroke android:width="1dp" android:color="@color/divider" />
+            <corners android:radius="10dp" />
+        </shape>
+    </item>
+
+</selector>
