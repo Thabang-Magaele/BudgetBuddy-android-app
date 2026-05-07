@@ -12,6 +12,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_EMAIL = "email";
 
     private String email;
+    private BottomNavigationView nav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,9 +21,8 @@ public class MainActivity extends AppCompatActivity {
 
         email = getIntent().getStringExtra(EXTRA_EMAIL);
 
-        BottomNavigationView nav = findViewById(R.id.bottomNav);
+        nav = findViewById(R.id.bottomNav);
 
-        // Default fragment
         if (savedInstanceState == null) {
             loadFragment(HomeFragment.newInstance(email));
         }
@@ -40,6 +40,15 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
         });
+    }
+
+    /**
+     * Called by HomeFragment when the user taps the Income or Expense card.
+     * Opens the Activity tab pre-filtered to the requested type.
+     */
+    public void openActivityWithFilter(String filter) {
+        loadFragment(ActivityFragment.newInstance(email, filter));
+        nav.getMenu().findItem(R.id.nav_activity).setChecked(true);
     }
 
     private void loadFragment(Fragment fragment) {

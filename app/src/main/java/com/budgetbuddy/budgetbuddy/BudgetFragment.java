@@ -1,10 +1,14 @@
 package com.budgetbuddy.budgetbuddy;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,8 +18,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.budgetbuddy.budgetbuddy.adapter.BudgetAdapter;
 import com.budgetbuddy.budgetbuddy.model.BudgetStore;
-import com.budgetbuddy.budgetbuddy.model.Transaction;
+import com.budgetbuddy.budgetbuddy.model.CategoryStore;
 import com.budgetbuddy.budgetbuddy.model.TransactionStore;
+import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +35,8 @@ public class BudgetFragment extends Fragment {
     private BudgetAdapter    adapter;
     private TransactionStore txStore;
     private BudgetStore      budgetStore;
+    private CategoryStore    categoryStore;
 
-    // Header views
     private TextView tvTotalLimit, tvTotalSpent, tvAlertCount;
 
     public static BudgetFragment newInstance(String email) {
@@ -46,8 +51,9 @@ public class BudgetFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) email = getArguments().getString(ARG_EMAIL);
-        txStore     = new TransactionStore(requireContext(), email);
-        budgetStore = new BudgetStore(requireContext(), email);
+        txStore       = new TransactionStore(requireContext(), email);
+        budgetStore   = new BudgetStore(requireContext(), email);
+        categoryStore = new CategoryStore(requireContext(), email);
     }
 
     @Nullable
@@ -70,6 +76,9 @@ public class BudgetFragment extends Fragment {
         adapter = new BudgetAdapter(this::openSetBudget);
         rv.setAdapter(adapter);
 
+        MaterialButton btnAddCategory = view.findViewById(R.id.btnAddCategory);
+        btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
+
         refresh();
     }
 
@@ -81,15 +90,17 @@ public class BudgetFragment extends Fragment {
 
     // -------------------------------------------------------------------------
     private void refresh() {
-        // Spending per category from transactions
         Map<String, Double> spentMap = txStore.expensesByCategory();
         Map<String, Double> limitMap = budgetStore.getAllLimits();
+
+        // Pull categories from CategoryStore so newly-added customs appear at top
+        List<String> categories = categoryStore.getBudgetableCategories();
 
         List<BudgetAdapter.BudgetRow> rows = new ArrayList<>();
         double totalLimit = 0, totalSpent = 0;
         int alertCount = 0;
 
-        for (String category : BudgetStore.BUDGETABLE_CATEGORIES) {
+        for (String category : categories) {
             double spent = spentMap.getOrDefault(category, 0.0);
             double limit = limitMap.getOrDefault(category, 0.0);
 
@@ -104,7 +115,6 @@ public class BudgetFragment extends Fragment {
 
         adapter.submit(rows);
 
-        // Header summary
         tvTotalLimit.setText(String.format(Locale.getDefault(), "R %.2f", totalLimit));
         tvTotalSpent.setText(String.format(Locale.getDefault(), "R %.2f", totalSpent));
 
@@ -122,5 +132,34 @@ public class BudgetFragment extends Fragment {
                 email, row.category, row.spent, row.limit);
         sheet.setOnSavedListener(this::refresh);
         sheet.show(getChildFragmentManager(), "set_budget");
+    }
+
+    private void showAddCategoryDialog() {
+        View dialogView = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_add_category, null);
+        EditText etName = dialogView.findViewById(R.id.etCategoryName);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("New Category")
+                .setView(dialogView)
+                .setPositiveButton("Add", (d, w) -> {
+                    String name = etName.getText().toString().trim();
+                    if (TextUtils.isEmpty(name)) {
+                        Toast.makeText(requireContext(),
+                                "Please enter a category name",
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    boolean added = categoryStore.addCustomCategory(name);
+                    if (!added) {
+                        Toast.makeText(requireContext(),
+                                "That category already exists",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        refresh();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

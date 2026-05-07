@@ -56,15 +56,31 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // Tappable income/expense cards
+        view.findViewById(R.id.cardIncome).setOnClickListener(v ->
+                openTransactionList(Transaction.TYPE_INCOME));
+        view.findViewById(R.id.cardExpenses).setOnClickListener(v ->
+                openTransactionList(Transaction.TYPE_EXPENSE));
+
         loadDashboard(view);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh whenever we return to this fragment
         View view = getView();
         if (view != null) loadDashboard(view);
+    }
+
+    private void openTransactionList(String type) {
+        // Switch to the Activity tab inside this MainActivity, pre-filtered.
+        String filter = Transaction.TYPE_INCOME.equals(type)
+                ? ActivityFragment.FILTER_INCOME
+                : ActivityFragment.FILTER_EXPENSE;
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).openActivityWithFilter(filter);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -73,8 +89,6 @@ public class HomeFragment extends Fragment {
                 .getSharedPreferences(PREFS_ONBOARDING, Context.MODE_PRIVATE);
         String key = email + "_";
 
-        // The onboarding values are the user's baseline.
-        // Transactions added in the Activity tab are *adjustments* on top of it.
         TransactionStore store = new TransactionStore(requireContext(), email);
 
         double baseIncome   = parseDouble(prefs.getString(key + "income",   "0"));
@@ -106,29 +120,29 @@ public class HomeFragment extends Fragment {
         ((TextView) view.findViewById(R.id.tvGoals))
                 .setText(goals != null && !goals.isEmpty() ? goals : "None set");
 
-        setupPieChart(view, store, expenses);
+        setupPieChart(view, store);
     }
 
-    private void setupPieChart(View view, TransactionStore store, double fallbackExpenses) {
-        PieChart pieChart = view.findViewById(R.id.pieChart);
+    private void setupPieChart(View view, TransactionStore store) {
+        PieChart pieChart  = view.findViewById(R.id.pieChart);
+        View chartCard     = view.findViewById(R.id.cardChart);
+        View emptyCard     = view.findViewById(R.id.cardChartEmpty);
+
         Map<String, Double> byCategory = store.expensesByCategory();
 
-        ArrayList<PieEntry> entries = new ArrayList<>();
+        // For brand-new accounts (no transactions), show empty-state card instead of the chart
+        if (byCategory.isEmpty()) {
+            chartCard.setVisibility(View.GONE);
+            emptyCard.setVisibility(View.VISIBLE);
+            return;
+        }
 
-        if (!byCategory.isEmpty()) {
-            // Real data from transactions
-            for (Map.Entry<String, Double> e : byCategory.entrySet()) {
-                entries.add(new PieEntry(e.getValue().floatValue(), e.getKey()));
-            }
-        } else if (fallbackExpenses > 0) {
-            // Estimated breakdown from onboarding figure
-            entries.add(new PieEntry((float)(fallbackExpenses * 0.30), "Food"));
-            entries.add(new PieEntry((float)(fallbackExpenses * 0.25), "Housing"));
-            entries.add(new PieEntry((float)(fallbackExpenses * 0.20), "Transport"));
-            entries.add(new PieEntry((float)(fallbackExpenses * 0.10), "Entertainment"));
-            entries.add(new PieEntry((float)(fallbackExpenses * 0.15), "Other"));
-        } else {
-            entries.add(new PieEntry(1f, "No data yet"));
+        chartCard.setVisibility(View.VISIBLE);
+        emptyCard.setVisibility(View.GONE);
+
+        ArrayList<PieEntry> entries = new ArrayList<>();
+        for (Map.Entry<String, Double> e : byCategory.entrySet()) {
+            entries.add(new PieEntry(e.getValue().floatValue(), e.getKey()));
         }
 
         int[] colours = {

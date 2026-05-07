@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,32 +23,35 @@ import java.util.Map;
 
 /**
  * Two view types: TYPE_HEADER (category group label) and TYPE_ITEM (transaction row).
- * Flat list is built from a Map<category, List<Transaction>>.
+ * Tapping a row opens a popup menu with Edit / Delete actions.
  */
 public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM   = 1;
 
-    // Each element is either a String (header) or a Transaction (row)
     private final List<Object> flatList = new ArrayList<>();
 
-    public interface OnDeleteListener {
-        void onDelete(Transaction t);
-    }
+    public interface OnDeleteListener { void onDelete(Transaction t); }
+    public interface OnEditListener   { void onEdit(Transaction t); }
 
-    private OnDeleteListener deleteListener;
+    private final OnDeleteListener deleteListener;
+    private final OnEditListener   editListener;
 
     public TransactionAdapter(OnDeleteListener deleteListener) {
-        this.deleteListener = deleteListener;
+        this(deleteListener, null);
     }
 
-    /** Re-builds the flat list from a grouped map. */
+    public TransactionAdapter(OnDeleteListener deleteListener, OnEditListener editListener) {
+        this.deleteListener = deleteListener;
+        this.editListener   = editListener;
+    }
+
     public void submitGrouped(Map<String, List<Transaction>> grouped) {
         flatList.clear();
         for (Map.Entry<String, List<Transaction>> entry : grouped.entrySet()) {
-            flatList.add(entry.getKey());               // header
-            flatList.addAll(entry.getValue());          // rows
+            flatList.add(entry.getKey());
+            flatList.addAll(entry.getValue());
         }
         notifyDataSetChanged();
     }
@@ -60,36 +64,27 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public int getItemCount() { return flatList.size(); }
 
-    // -------------------------------------------------------------------------
-    // onCreateViewHolder
-    // -------------------------------------------------------------------------
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inf = LayoutInflater.from(parent.getContext());
         if (viewType == TYPE_HEADER) {
-            View v = inf.inflate(R.layout.item_category_header, parent, false);
-            return new HeaderVH(v);
+            return new HeaderVH(inf.inflate(R.layout.item_category_header, parent, false));
         } else {
-            View v = inf.inflate(R.layout.item_transaction, parent, false);
-            return new ItemVH(v);
+            return new ItemVH(inf.inflate(R.layout.item_transaction, parent, false));
         }
     }
 
-    // -------------------------------------------------------------------------
-    // onBindViewHolder
-    // -------------------------------------------------------------------------
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof HeaderVH) {
             ((HeaderVH) holder).bind((String) flatList.get(position));
         } else {
-            ((ItemVH) holder).bind((Transaction) flatList.get(position), deleteListener);
+            ((ItemVH) holder).bind((Transaction) flatList.get(position),
+                    deleteListener, editListener);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // ViewHolders
     // -------------------------------------------------------------------------
     static class HeaderVH extends RecyclerView.ViewHolder {
         TextView tvCategory;
@@ -111,7 +106,10 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             tvDate        = v.findViewById(R.id.tvDate);
             tvType        = v.findViewById(R.id.tvType);
         }
-        void bind(Transaction t, OnDeleteListener deleteListener) {
+        void bind(Transaction t,
+                  OnDeleteListener deleteListener,
+                  OnEditListener editListener) {
+
             tvDescription.setText(t.getDescription());
             tvDate.setText(new SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                     .format(new Date(t.getDate())));
@@ -124,16 +122,21 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             tvType.setText(expense ? "Expense" : "Income");
             tvType.setTextColor(Color.parseColor(expense ? "#C62828" : "#2E7D32"));
 
-            // Long-press to delete
-            itemView.setOnLongClickListener(v -> {
-                if (deleteListener != null) deleteListener.onDelete(t);
-                return true;
+            // Tap → popup menu with Edit / Delete
+            itemView.setOnClickListener(v -> {
+                PopupMenu popup = new PopupMenu(v.getContext(), v);
+                popup.getMenu().add(0, 1, 0, "Edit");
+                popup.getMenu().add(0, 2, 1, "Delete");
+                popup.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == 1 && editListener != null)   editListener.onEdit(t);
+                    if (item.getItemId() == 2 && deleteListener != null) deleteListener.onDelete(t);
+                    return true;
+                });
+                popup.show();
             });
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
     // -------------------------------------------------------------------------
     public static String categoryEmoji(String category) {
         switch (category) {
@@ -146,11 +149,10 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case "Education":     return "📚";
             case "Salary":        return "💼";
             case "Other":         return "📦";
-            default:              return "💰";
+            default:              return "💰";  // custom categories
         }
     }
 
-    /** Groups a flat transaction list by category, preserving insertion order. */
     public static Map<String, List<Transaction>> groupByCategory(List<Transaction> transactions) {
         Map<String, List<Transaction>> map = new LinkedHashMap<>();
         for (Transaction t : transactions) {

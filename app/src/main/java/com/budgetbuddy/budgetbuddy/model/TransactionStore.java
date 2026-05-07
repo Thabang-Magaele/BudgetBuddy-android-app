@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,19 @@ public class TransactionStore {
         List<Transaction> list = getAll();
         list.removeIf(t -> t.getId().equals(id));
         save(list);
+    }
+
+    /** Replaces an existing transaction (matched by id) in-place. */
+    public void update(Transaction updated) {
+        if (updated.getId() == null) return;
+        List<Transaction> list = getAll();
+        for (int i = 0; i < list.size(); i++) {
+            if (updated.getId().equals(list.get(i).getId())) {
+                list.set(i, updated);
+                save(list);
+                return;
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

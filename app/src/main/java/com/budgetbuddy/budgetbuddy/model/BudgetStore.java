@@ -3,24 +3,25 @@ package com.budgetbuddy.budgetbuddy.model;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Stores per-category monthly budget limits.
- * Key format: "<email>_<category>" → double (limit in ZAR)
+ * Stores per-category monthly budget limits and the user's custom categories.
  *
- * Example:
- *   thabang@example.com_Transport → 500.0
- *   thabang@example.com_Food      → 1500.0
+ * Three key formats inside the "BudgetBuddyBudgets" SharedPreferences file:
+ *   <email>_limit_<category>   → limit (string-encoded double)
+ *   <email>_custom_categories  → "Pets,Gifts,Subscriptions"  (comma-separated)
  */
 public class BudgetStore {
 
     private static final String PREFS_NAME = "BudgetBuddyBudgets";
 
-    // All categories that can have a budget set against them.
-    // Income-only categories (Salary) are intentionally excluded.
-    public static final String[] BUDGETABLE_CATEGORIES = {
+    /** Built-in categories that are always shown. Salary is income-only, excluded. */
+    public static final String[] BUILT_IN_CATEGORIES = {
             Transaction.CAT_FOOD,
             Transaction.CAT_TRANSPORT,
             Transaction.CAT_HOUSING,
@@ -40,9 +41,10 @@ public class BudgetStore {
     }
 
     // -------------------------------------------------------------------------
+    // Limits
+    // -------------------------------------------------------------------------
     public double getLimit(String category) {
-        // Stored as a String for SharedPreferences-friendliness with decimals.
-        String raw = prefs.getString(key(category), null);
+        String raw = prefs.getString(limitKey(category), null);
         if (raw == null) return 0;
         try { return Double.parseDouble(raw); }
         catch (NumberFormatException e) { return 0; }
@@ -50,26 +52,81 @@ public class BudgetStore {
 
     public void setLimit(String category, double amount) {
         if (amount <= 0) {
-            prefs.edit().remove(key(category)).apply();
+            prefs.edit().remove(limitKey(category)).apply();
         } else {
-            prefs.edit().putString(key(category), String.valueOf(amount)).apply();
+            prefs.edit().putString(limitKey(category), String.valueOf(amount)).apply();
         }
     }
 
     public void clearLimit(String category) {
-        prefs.edit().remove(key(category)).apply();
+        prefs.edit().remove(limitKey(category)).apply();
     }
 
-    /** Returns every category along with its currently-set limit (0 = no limit set). */
+    // -------------------------------------------------------------------------
+    // Custom categories — newest are returned first
+    // -------------------------------------------------------------------------
+    public List<String> getCustomCategories() {
+        String raw = prefs.getString(customKey(), "");
+        if (raw == null || raw.isEmpty()) return new ArrayList<>();
+        return new ArrayList<>(Arrays.asList(raw.split(",")));
+    }
+
+    /** Adds a new custom category at the FRONT of the list (most recent first). */
+    public boolean addCustomCategory(String name) {
+        if (name == null) return false;
+        name = name.trim();
+        if (name.isEmpty()) return false;
+
+        // Prevent duplicates (case-insensitive) against built-ins or existing customs
+        for (String built : BUILT_IN_CATEGORIES) {
+            if (built.equalsIgnoreCase(name)) return false;
+        }
+        List<String> existing = getCustomCategories();
+        for (String c : existing) {
+            if (c.equalsIgnoreCase(name)) return false;
+        }
+
+        existing.add(0, name); // newest first
+        prefs.edit().putString(customKey(), String.join(",", existing)).apply();
+        return true;
+    }
+
+    public void removeCustomCategory(String name) {
+        List<String> existing = getCustomCategories();
+        existing.removeIf(c -> c.equalsIgnoreCase(name));
+        prefs.edit().putString(customKey(), String.join(",", existing)).apply();
+        // Also drop any limit set against it
+        clearLimit(name);
+    }
+
+    /**
+     * Returns every category that should appear in the Budget tab, in display order:
+     * custom categories first (newest at top), then built-ins.
+     */
+    public List<String> getAllCategoriesOrdered() {
+        List<String> ordered = new ArrayList<>(getCustomCategories());
+        ordered.addAll(Arrays.asList(BUILT_IN_CATEGORIES));
+        return ordered;
+    }
+
+    /**
+     * Returns every category that has a limit currently set, mapped to its limit value.
+     * Scans all stored limit keys directly so it works regardless of where the
+     * category name was registered (built-in, BudgetStore-custom, or CategoryStore-custom).
+     */
     public Map<String, Double> getAllLimits() {
         Map<String, Double> map = new LinkedHashMap<>();
-        for (String cat : BUDGETABLE_CATEGORIES) {
-            map.put(cat, getLimit(cat));
+        String prefix = email + "_limit_";
+        for (String fullKey : prefs.getAll().keySet()) {
+            if (fullKey.startsWith(prefix)) {
+                String category = fullKey.substring(prefix.length());
+                map.put(category, getLimit(category));
+            }
         }
         return map;
     }
 
-    private String key(String category) {
-        return email + "_" + category;
-    }
+    // -------------------------------------------------------------------------
+    private String limitKey(String category)  { return email + "_limit_" + category; }
+    private String customKey()                { return email + "_custom_categories"; }
 }

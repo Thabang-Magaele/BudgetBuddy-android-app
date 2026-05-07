@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.budgetbuddy.budgetbuddy"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.budgetbuddy.budgetbuddy"
@@ -41,6 +41,7 @@ dependencies {
 
     // MPAndroidChart for pie chart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation(libs.androidbrowserhelper)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

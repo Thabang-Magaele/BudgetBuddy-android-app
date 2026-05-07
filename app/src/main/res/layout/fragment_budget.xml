@@ -135,19 +135,37 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- ── Section label ───────────────────────────────────────── -->
-    <TextView
+    <!-- ── Section label + Add button ──────────────────────────── -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:paddingStart="24dp"
-        android:paddingEnd="24dp"
+        android:paddingEnd="16dp"
         android:paddingTop="20dp"
-        android:paddingBottom="8dp"
-        android:text="CATEGORY LIMITS"
-        android:textColor="@color/primary"
-        android:textSize="12sp"
-        android:fontFamily="sans-serif-medium"
-        android:letterSpacing="0.08" />
+        android:paddingBottom="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="CATEGORY LIMITS"
+            android:textColor="@color/primary"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.08" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddCategory"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ Add Category"
+            android:textColor="@color/primary"
+            android:textSize="13sp" />
+
+    </LinearLayout>
 
     <!-- ── List ────────────────────────────────────────────────── -->
     <androidx.recyclerview.widget.RecyclerView

@@ -16,6 +16,7 @@
         android:background="@color/divider" />
 
     <TextView
+        android:id="@+id/tvSheetTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add Transaction"
@@ -165,5 +166,16 @@
         android:textSize="16sp"
         app:backgroundTint="@color/primary"
         app:cornerRadius="12dp" />
+
+    <!-- Delete button (only shown in edit mode) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDelete"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:text="Delete Transaction"
+        android:textColor="@color/expense_red"
+        android:visibility="gone" />
 
 </LinearLayout>
