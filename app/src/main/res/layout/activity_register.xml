@@ -30,8 +30,12 @@
         </LinearLayout>
 
         <!-- Header -->
-
-
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="💰"
+            android:textSize="56sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -137,6 +141,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:text="Create Account"
+            android:textColor="#FFFFFF"
             android:textSize="16sp"
             app:backgroundTint="@color/primary"
             app:cornerRadius="12dp" />

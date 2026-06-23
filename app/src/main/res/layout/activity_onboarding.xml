@@ -200,7 +200,7 @@
     </LinearLayout>
 
     <!-- ── STEP 3 · Budget Goals ───────────────────────────────── -->
-    <LinearLayout
+    <ScrollView
         android:id="@+id/layoutStep3"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -327,7 +327,7 @@
             </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 
     <!-- ── Navigation buttons ──────────────────────────────────── -->
     <LinearLayout
@@ -356,6 +356,7 @@
             android:layout_height="52dp"
             android:layout_weight="1"
             android:text="Next →"
+            android:textColor="#FFFFFF"
             android:textSize="16sp"
             app:backgroundTint="@color/primary"
             app:cornerRadius="12dp" />

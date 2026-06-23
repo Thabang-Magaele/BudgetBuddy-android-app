@@ -8,7 +8,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,8 +28,9 @@ public class OnboardingActivity extends AppCompatActivity {
     private View stepDot1, stepDot2, stepDot3;
     private TextView tvStepLabel;
 
-    // Step containers
-    private LinearLayout layoutStep1, layoutStep2, layoutStep3;
+    // Step containers — step 3 is a ScrollView; the others are LinearLayouts,
+    // so the common supertype View is used here.
+    private View layoutStep1, layoutStep2, layoutStep3;
 
     // Step 1 — Income
     private TextInputLayout tilIncome;
@@ -125,7 +125,7 @@ public class OnboardingActivity extends AppCompatActivity {
         layoutStep3.setVisibility(currentStep == 3 ? View.VISIBLE : View.GONE);
 
         // Animate in
-        LinearLayout current = currentStep == 1 ? layoutStep1
+        View current = currentStep == 1 ? layoutStep1
                 : currentStep == 2 ? layoutStep2 : layoutStep3;
         current.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_in));
 
