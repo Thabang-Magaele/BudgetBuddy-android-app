@@ -16,9 +16,9 @@
 
 <div align="center">
 
-[![Download APK](https://img.shields.io/github/v/release/BudgetBuddy-android-app?label=Download%20APK&color=2C5F2D&logo=android&logoColor=white)](https://github.com/<your-username>/BudgetBuddy-android-app/releases/v1.1)
+[![Download APK](https://img.shields.io/github/v/release/Thabang-Magaele/BudgetBuddy-android-app)
 
-**[⬇️ Download the latest APK](https://github.com/BudgetBuddy-android-app/releases/v1.1)**
+**[⬇️ Download the latest APK](https://github.com/Thabang-Magaele/BudgetBuddy-android-app/releases/download/v1.1/BudgetBuddy-v1.1.apk)**
 
 </div>
 
