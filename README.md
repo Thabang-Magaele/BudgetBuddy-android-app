@@ -312,6 +312,6 @@ This is a student project, but if you're a fellow developer or learner who wants
 
 <div align="center">
 
-**Made with ☕ and a tight student budget in Pretoria, South Africa.**
+**Made with ☕ and a tight student budget in Mbombela, Mpumalanga, South Africa.**
 
 </div>
