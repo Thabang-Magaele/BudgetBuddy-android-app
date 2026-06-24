@@ -14,6 +14,14 @@
 
 </div>
 
+<div align="center">
+
+[![Download APK](https://img.shields.io/github/v/release/<your-username>/BudgetBuddy?label=Download%20APK&color=2C5F2D&logo=android&logoColor=white)](https://github.com/<your-username>/BudgetBuddy/releases/latest)
+
+**[⬇️ Download the latest APK](https://github.com/<your-username>/BudgetBuddy/releases/latest)**
+
+</div>
+
 ---
 
 ## ✨ What it does
