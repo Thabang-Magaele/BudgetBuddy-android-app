@@ -16,7 +16,7 @@
 
 <div align="center">
 
-[![Download APK](https://img.shields.io/github/v/release/Thabang-Magaele/BudgetBuddy-android-app)
+![Download APK](https://img.shields.io/github/v/release/Thabang-Magaele/BudgetBuddy-android-app)
 
 **[⬇️ Download the latest APK](https://github.com/Thabang-Magaele/BudgetBuddy-android-app/releases/download/v1.1/BudgetBuddy-v1.1.apk)**
 
